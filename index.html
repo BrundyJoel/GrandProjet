@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Gestion de Réseau SDN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* Animation pour les cartes */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+
+      /* Style personnalisé pour le graphique de topologie */
+      .topology-graph {
+        background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+        background-size: 20px 20px;
+      }
+
+      /* Style pour les nœuds du réseau */
+      .network-node {
+        transition: all 0.3s ease;
+      }
+
+      .network-node:hover {
+        transform: scale(1.1);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Style pour les liens du réseau */
+      .network-link {
+        stroke: #4f46e5;
+        stroke-width: 2;
+        transition: all 0.3s ease;
+      }
+
+      /* Section cachée par défaut */
+      .section {
+        display: none;
+      }
+
+      /* Section active */
+      .section.active {
+        display: block;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <nav
+      class="fixed top-0 left-0 right-0 bg-indigo-600 text-white shadow-lg z-50"
+    >
+      <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center space-x-2">
+            <i class="fas fa-network-wired text-xl"></i>
+            <span class="font-bold text-xl">SDN Manager</span>
+          </div>
+          <div class="hidden md:flex space-x-1">
+            <button
+              class="nav-btn px-4 py-2 rounded-md hover:bg-indigo-700 transition active"
+              onclick="loadSection('home')"
+            >
+              <i class="fas fa-home mr-2"></i>Home
+            </button>
+            <button
+              class="nav-btn px-4 py-2 rounded-md hover:bg-indigo-700 transition"
+              onclick="loadSection('create')"
+            >
+              <i class="fas fa-plus-circle mr-2"></i>Créer une topologie
+            </button>
+            <button
+              class="nav-btn px-4 py-2 rounded-md hover:bg-indigo-700 transition"
+              onclick="loadSection('topology')"
+            >
+              <i class="fas fa-project-diagram mr-2"></i>Topologie
+            </button>
+            <button
+              class="nav-btn px-4 py-2 rounded-md hover:bg-indigo-700 transition"
+              onclick="loadSection('monitoring')"
+            >
+              <i class="fas fa-chart-line mr-2"></i>Monitoring
+            </button>
+            <button
+              class="nav-btn px-4 py-2 rounded-md hover:bg-indigo-700 transition"
+              onclick="loadSection('ai')"
+            >
+              <i class="fas fa-brain mr-2"></i>IA
+            </button>
+          </div>
+          <div class="md:hidden">
+            <button
+              class="text-white focus:outline-none"
+              id="mobile-menu-button"
+            >
+              <i class="fas fa-bars text-xl"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Menu mobile -->
+      <div class="hidden md:hidden bg-indigo-700" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1">
+          <button
+            class="nav-btn block px-3 py-2 rounded-md text-white hover:bg-indigo-600 w-full text-left"
+            onclick="loadSection('home')"
+          >
+            <i class="fas fa-home mr-2"></i>Home
+          </button>
+          <button
+            class="nav-btn block px-3 py-2 rounded-md text-white hover:bg-indigo-600 w-full text-left"
+            onclick="loadSection('create')"
+          >
+            <i class="fas fa-plus-circle mr-2"></i>Créer une topologie
+          </button>
+          <button
+            class="nav-btn block px-3 py-2 rounded-md text-white hover:bg-indigo-600 w-full text-left"
+            onclick="loadSection('topology')"
+          >
+            <i class="fas fa-project-diagram mr-2"></i>Topologie
+          </button>
+          <button
+            class="nav-btn block px-3 py-2 rounded-md text-white hover:bg-indigo-600 w-full text-left"
+            onclick="loadSection('monitoring')"
+          >
+            <i class="fas fa-chart-line mr-2"></i>Monitoring
+          </button>
+          <button
+            class="nav-btn block px-3 py-2 rounded-md text-white hover:bg-indigo-600 w-full text-left"
+            onclick="loadSection('ai')"
+          >
+            <i class="fas fa-brain mr-2"></i>IA
+          </button>
+        </div>
+      </div>
+    </nav>
+    <main id="content" class="pt-20 pb-10 container mx-auto px-4">
+      Chargement...
+    </main>
+    <footer class="bg-gray-800 text-white py-6">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <div class="mb-4 md:mb-0">
+            <div class="flex items-center space-x-2">
+              <i class="fas fa-network-wired text-xl"></i>
+              <span class="font-bold text-xl">SDN Manager</span>
+            </div>
+            <p class="text-gray-400 mt-2">
+              Gestion avancée des réseaux Software-Defined
+            </p>
+          </div>
+          <div class="flex space-x-6">
+            <a class="text-gray-400 hover:text-white transition" href="#">
+              <i class="fab fa-github text-xl"></i>
+            </a>
+            <a class="text-gray-400 hover:text-white transition" href="#">
+              <i class="fab fa-twitter text-xl"></i>
+            </a>
+            <a class="text-gray-400 hover:text-white transition" href="#">
+              <i class="fab fa-linkedin text-xl"></i>
+            </a>
+          </div>
+        </div>
+        <div
+          class="border-t border-gray-700 mt-6 pt-6 text-center text-gray-400 text-sm"
+        >
+          <p>© 2025 SDN Manager. Tous droits réservés.</p>
+        </div>
+      </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./main.js"></script>
+  </body>
+</html>
