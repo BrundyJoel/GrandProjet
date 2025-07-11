@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion de Réseau SDN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Animation pour les cartes */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        /* Style personnalisé pour le graphique de topologie */
+        .topology-graph {
+            background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        /* Style pour les nœuds du réseau */
+        .network-node {
+            transition: all 0.3s ease;
+        }
+        
+        .network-node:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Style pour les liens du réseau */
+        .network-link {
+            stroke: #4f46e5;
+            stroke-width: 2;
+            transition: all 0.3s ease;
+        }
+        
+        /* Section cachée par défaut */
+        .section {
+            display: none;
+        }
+        
+        /* Section active */
+        .section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Barre de navigation fixe -->
+    <nav class="fixed top-0 left-0 right-0 bg-indigo-600 text-white shadow-lg z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-network-wired text-xl"></i>
+                    <span class="font-bold text-xl">SDN Manager</span>
+                </div>
+                
+                <div class="hidden md:flex space-x-1">
+                    <button onclick="showSection('home')" class="nav-btn px-4 py-2 rounded-md hover:bg-indigo-700 transition active">
+                        <i class="fas fa-home mr-2"></i>Home
+                    </button>
+                    <button onclick="showSection('create')" class="nav-btn px-4 py-2 rounded-md hover:bg-indigo-700 transition">
+                        <i class="fas fa-plus-circle mr-2"></i>Créer une topologie
+                    </button>
+                    <button onclick="showSection('topology')" class="nav-btn px-4 py-2 rounded-md hover:bg-indigo-700 transition">
+                        <i class="fas fa-project-diagram mr-2"></i>Topologie
+                    </button>
+                    <button onclick="showSection('monitoring')" class="nav-btn px-4 py-2 rounded-md hover:bg-indigo-700 transition">
+                        <i class="fas fa-chart-line mr-2"></i>Monitoring
+                    </button>
+                    <button onclick="showSection('ai')" class="nav-btn px-4 py-2 rounded-md hover:bg-indigo-700 transition">
+                        <i class="fas fa-brain mr-2"></i>IA
+                    </button>
+                </div>
+                
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-white focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Menu mobile -->
+        <div id="mobile-menu" class="hidden md:hidden bg-indigo-700">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <button onclick="showSection('home')" class="nav-btn block px-3 py-2 rounded-md text-white hover:bg-indigo-600 w-full text-left">
+                    <i class="fas fa-home mr-2"></i>Home
+                </button>
+                <button onclick="showSection('create')" class="nav-btn block px-3 py-2 rounded-md text-white hover:bg-indigo-600 w-full text-left">
+                    <i class="fas fa-plus-circle mr-2"></i>Créer une topologie
+                </button>
+                <button onclick="showSection('topology')" class="nav-btn block px-3 py-2 rounded-md text-white hover:bg-indigo-600 w-full text-left">
+                    <i class="fas fa-project-diagram mr-2"></i>Topologie
+                </button>
+                <button onclick="showSection('monitoring')" class="nav-btn block px-3 py-2 rounded-md text-white hover:bg-indigo-600 w-full text-left">
+                    <i class="fas fa-chart-line mr-2"></i>Monitoring
+                </button>
+                <button onclick="showSection('ai')" class="nav-btn block px-3 py-2 rounded-md text-white hover:bg-indigo-600 w-full text-left">
+                    <i class="fas fa-brain mr-2"></i>IA
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenu principal -->
+    <main class="pt-20 pb-10 container mx-auto px-4">
+        <!-- Section Home -->
+        <section id="home" class="section active animate-fade-in">
+            <div class="text-center mb-10">
+                <h1 class="text-4xl font-bold text-indigo-800 mb-4">Bienvenue sur SDN Manager</h1>
+                <p class="text-xl text-gray-600">Gérez votre réseau Software-Defined Networking avec facilité et efficacité</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition duration-300">
+                    <div class="text-indigo-600 mb-4">
+                        <i class="fas fa-project-diagram text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Gestion de Topologie</h3>
+                    <p class="text-gray-600">Créez et visualisez vos topologies réseau avec une interface intuitive et des outils puissants.</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition duration-300">
+                    <div class="text-indigo-600 mb-4">
+                        <i class="fas fa-chart-line text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Monitoring en Temps Réel</h3>
+                    <p class="text-gray-600">Surveillez les performances de votre réseau avec des graphiques et alertes en temps réel.</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition duration-300">
+                    <div class="text-indigo-600 mb-4">
+                        <i class="fas fa-brain text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Intelligence Artificielle</h3>
+                    <p class="text-gray-600">Optimisez votre réseau avec nos algorithmes d'IA pour le routage et la gestion du trafic.</p>
+                </div>
+            </div>
+            
+            <div class="mt-10 bg-indigo-50 p-6 rounded-lg">
+                <h2 class="text-2xl font-semibold text-indigo-800 mb-4">Dernières Activités</h2>
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="bg-indigo-100 p-2 rounded-full mr-4">
+                            <i class="fas fa-bell text-indigo-600"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">Nouveau commutateur ajouté à la topologie "Réseau Principal"</p>
+                            <p class="text-sm text-gray-500">Il y a 2 heures</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="bg-indigo-100 p-2 rounded-full mr-4">
+                            <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">Alerte: Latence élevée détectée sur le lien Switch1 → Switch2</p>
+                            <p class="text-sm text-gray-500">Il y a 5 heures</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="bg-indigo-100 p-2 rounded-full mr-4">
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">L'IA a optimisé le routage pour réduire la congestion de 15%</p>
+                            <p class="text-sm text-gray-500">Hier à 14:30</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Créer une topologie -->
+        <section id="create" class="section">
+            <h1 class="text-3xl font-bold text-indigo-800 mb-6">Créer une Topologie</h1>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2">
+                    <div class="bg-white p-4 rounded-lg shadow-md topology-graph" style="height: 500px;">
+                        <svg id="topology-canvas" width="100%" height="100%"></svg>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                        <h2 class="text-xl font-semibold mb-4">Éléments du Réseau</h2>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <button onclick="addNode('switch')" class="flex flex-col items-center justify-center p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition">
+                                <i class="fas fa-network-wired text-3xl text-indigo-600 mb-2"></i>
+                                <span>Commutateur</span>
+                            </button>
+                            <button onclick="addNode('router')" class="flex flex-col items-center justify-center p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition">
+                                <i class="fas fa-route text-3xl text-indigo-600 mb-2"></i>
+                                <span>Routeur</span>
+                            </button>
+                            <button onclick="addNode('host')" class="flex flex-col items-center justify-center p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition">
+                                <i class="fas fa-desktop text-3xl text-indigo-600 mb-2"></i>
+                                <span>Hôte</span>
+                            </button>
+                            <button onclick="addNode('server')" class="flex flex-col items-center justify-center p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition">
+                                <i class="fas fa-server text-3xl text-indigo-600 mb-2"></i>
+                                <span>Serveur</span>
+                            </button>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2">Nom de la topologie</label>
+                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        
+                        <button class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition">
+                            <i class="fas fa-save mr-2"></i>Enregistrer la topologie
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-xl font-semibold mb-4">Propriétés</h2>
+                        <div id="properties-panel" class="text-gray-500 italic">
+                            Sélectionnez un élément pour voir et modifier ses propriétés
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Topologie -->
+        <section id="topology" class="section">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold text-indigo-800">Topologies</h1>
+                <button class="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition">
+                    <i class="fas fa-plus mr-2"></i>Nouvelle topologie
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300">
+                    <div class="bg-indigo-100 p-4">
+                        <h3 class="text-xl font-semibold">Réseau Principal</h3>
+                        <p class="text-gray-600 text-sm">Dernière modification: 12/06/2025</p>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between mb-3">
+                            <span class="text-gray-600">Commutateurs:</span>
+                            <span class="font-medium">8</span>
+                        </div>
+                        <div class="flex justify-between mb-3">
+                            <span class="text-gray-600">Routeurs:</span>
+                            <span class="font-medium">2</span>
+                        </div>
+                        <div class="flex justify-between mb-4">
+                            <span class="text-gray-600">Hôtes:</span>
+                            <span class="font-medium">24</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-indigo-600 text-white py-1 px-3 rounded-md text-sm hover:bg-indigo-700 transition">
+                                <i class="fas fa-eye mr-1"></i>Voir
+                            </button>
+                            <button class="flex-1 bg-gray-200 text-gray-700 py-1 px-3 rounded-md text-sm hover:bg-gray-300 transition">
+                                <i class="fas fa-edit mr-1"></i>Éditer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300">
+                    <div class="bg-indigo-100 p-4">
+                        <h3 class="text-xl font-semibold">Réseau DMZ</h3>
+                        <p class="text-gray-600 text-sm">Dernière modification: 05/06/2025</p>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between mb-3">
+                            <span class="text-gray-600">Commutateurs:</span>
+                            <span class="font-medium">3</span>
+                        </div>
+                        <div class="flex justify-between mb-3">
+                            <span class="text-gray-600">Routeurs:</span>
+                            <span class="font-medium">1</span>
+                        </div>
+                        <div class="flex justify-between mb-4">
+                            <span class="text-gray-600">Serveurs:</span>
+                            <span class="font-medium">5</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-indigo-600 text-white py-1 px-3 rounded-md text-sm hover:bg-indigo-700 transition">
+                                <i class="fas fa-eye mr-1"></i>Voir
+                            </button>
+                            <button class="flex-1 bg-gray-200 text-gray-700 py-1 px-3 rounded-md text-sm hover:bg-gray-300 transition">
+                                <i class="fas fa-edit mr-1"></i>Éditer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300">
+                    <div class="bg-indigo-100 p-4">
+                        <h3 class="text-xl font-semibold">Réseau Test</h3>
+                        <p class="text-gray-600 text-sm">Dernière modification: 01/06/2025</p>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between mb-3">
+                            <span class="text-gray-600">Commutateurs:</span>
+                            <span class="font-medium">2</span>
+                        </div>
+                        <div class="flex justify-between mb-3">
+                            <span class="text-gray-600">Hôtes:</span>
+                            <span class="font-medium">4</span>
+                        </div>
+                        <div class="flex justify-between mb-4">
+                            <span class="text-gray-600">Liens:</span>
+                            <span class="font-medium">6</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-indigo-600 text-white py-1 px-3 rounded-md text-sm hover:bg-indigo-700 transition">
+                                <i class="fas fa-eye mr-1"></i>Voir
+                            </button>
+                            <button class="flex-1 bg-gray-200 text-gray-700 py-1 px-3 rounded-md text-sm hover:bg-gray-300 transition">
+                                <i class="fas fa-edit mr-1"></i>Éditer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Monitoring -->
+        <section id="monitoring" class="section">
+            <h1 class="text-3xl font-bold text-indigo-800 mb-6">Monitoring du Réseau</h1>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold">État du Réseau</h2>
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                            <i class="fas fa-check-circle mr-1"></i>Opérationnel
+                        </span>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-600">Disponibilité</span>
+                                <span class="font-medium">99.98%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" style="width: 99.98%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-600">Utilisation CPU</span>
+                                <span class="font-medium">32%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: 32%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-600">Utilisation Mémoire</span>
+                                <span class="font-medium">45%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-purple-500 h-2 rounded-full" style="width: 45%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold mb-4">Trafic Réseau</h2>
+                    <div class="h-48">
+                        <canvas id="traffic-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold mb-4">Alertes Récentes</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-start">
+                            <div class="bg-yellow-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">Latence élevée sur Switch1</p>
+                                <p class="text-sm text-gray-500">15:42 - 12/06/2025</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-red-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-times-circle text-red-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">Lien Switch2 → Switch3 coupé</p>
+                                <p class="text-sm text-gray-500">10:18 - 11/06/2025</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-info-circle text-blue-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">Nouvel hôte détecté</p>
+                                <p class="text-sm text-gray-500">08:30 - 10/06/2025</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h2 class="text-xl font-semibold mb-4">Performances des Équipements</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Équipement</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPU</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mémoire</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trafic Entrant</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trafic Sortant</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">État</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">Switch1</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Commutateur</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                            <div class="bg-blue-500 h-2 rounded-full" style="width: 28%"></div>
+                                        </div>
+                                        <span>28%</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                            <div class="bg-purple-500 h-2 rounded-full" style="width: 42%"></div>
+                                        </div>
+                                        <span>42%</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">45 Mbps</td>
+                                <td class="px-6 py-4 whitespace-nowrap">38 Mbps</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">OK</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">Switch2</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Commutateur</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                            <div class="bg-blue-500 h-2 rounded-full" style="width: 65%"></div>
+                                        </div>
+                                        <span>65%</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                            <div class="bg-purple-500 h-2 rounded-full" style="width: 78%"></div>
+                                        </div>
+                                        <span>78%</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">120 Mbps</td>
+                                <td class="px-6 py-4 whitespace-nowrap">95 Mbps</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Alerte</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">Router1</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Routeur</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                            <div class="bg-blue-500 h-2 rounded-full" style="width: 42%"></div>
+                                        </div>
+                                        <span>42%</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                            <div class="bg-purple-500 h-2 rounded-full" style="width: 55%"></div>
+                                        </div>
+                                        <span>55%</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">210 Mbps</td>
+                                <td class="px-6 py-4 whitespace-nowrap">195 Mbps</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">OK</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold mb-4">Latence des Liens</h2>
+                    <div class="h-64">
+                        <canvas id="latency-chart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold mb-4">Utilisation de la Bande Passante</h2>
+                    <div class="h-64">
+                        <canvas id="bandwidth-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section IA -->
+        <section id="ai" class="section">
+            <h1 class="text-3xl font-bold text-indigo-800 mb-6">Intelligence Artificielle</h1>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold mb-4">Optimisation Automatique</h2>
+                    <div class="flex items-start mb-6">
+                        <div class="bg-indigo-100 p-3 rounded-full mr-4">
+                            <i class="fas fa-cogs text-indigo-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">L'IA surveille en permanence votre réseau et applique des optimisations automatiques.</p>
+                            <p class="text-gray-600 text-sm mt-1">Dernière optimisation: Il y a 15 minutes</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-600">Performance du réseau</span>
+                                <span class="font-medium">+22%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" style="width: 22%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-600">Réduction de la congestion</span>
+                                <span class="font-medium">-35%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: 35%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-600">Économie d'énergie</span>
+                                <span class="font-medium">+18%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-purple-500 h-2 rounded-full" style="width: 18%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold mb-4">Détection d'Anomalies</h2>
+                    <div class="flex items-start mb-6">
+                        <div class="bg-indigo-100 p-3 rounded-full mr-4">
+                            <i class="fas fa-shield-alt text-indigo-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">Notre IA détecte les comportements anormaux et les menaces potentielles en temps réel.</p>
+                            <p class="text-gray-600 text-sm mt-1">Dernière analyse: Il y a 2 minutes</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <div class="w-2/3">
+                                <p class="font-medium">Menaces détectées</p>
+                                <p class="text-gray-600 text-sm">Ce mois-ci</p>
+                            </div>
+                            <div class="w-1/3 text-right">
+                                <span class="text-2xl font-bold text-red-500">3</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-2/3">
+                                <p class="font-medium">Faux positifs</p>
+                                <p class="text-gray-600 text-sm">Taux d'erreur</p>
+                            </div>
+                            <div class="w-1/3 text-right">
+                                <span class="text-2xl font-bold text-green-500">1.2%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-2/3">
+                                <p class="font-medium">Temps de réponse</p>
+                                <p class="text-gray-600 text-sm">Moyenne</p>
+                            </div>
+                            <div class="w-1/3 text-right">
+                                <span class="text-2xl font-bold text-blue-500">0.8s</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <h2 class="text-xl font-semibold mb-4">Recommandations d'Optimisation</h2>
+                
+                <div class="space-y-4">
+                    <div class="flex items-start p-4 bg-blue-50 rounded-lg">
+                        <div class="bg-blue-100 p-2 rounded-full mr-4">
+                            <i class="fas fa-lightbulb text-blue-600"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">Rééquilibrage des charges recommandé</p>
+                            <p class="text-gray-600 text-sm mt-1">Switch2 est surchargé (CPU à 78%). Considérez redistribuer certaines connexions vers Switch3.</p>
+                            <button class="mt-2 bg-blue-600 text-white py-1 px-3 rounded-md text-sm hover:bg-blue-700 transition">
+                                <i class="fas fa-play mr-1"></i>Appliquer
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start p-4 bg-purple-50 rounded-lg">
+                        <div class="bg-purple-100 p-2 rounded-full mr-4">
+                            <i class="fas fa-lightbulb text-purple-600"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">Optimisation du routage disponible</p>
+                            <p class="text-gray-600 text-sm mt-1">Le trafic entre Host5 et Server2 pourrait être routé plus efficacement via Switch1 plutôt que Switch3.</p>
+                            <button class="mt-2 bg-purple-600 text-white py-1 px-3 rounded-md text-sm hover:bg-purple-700 transition">
+                                <i class="fas fa-play mr-1"></i>Appliquer
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start p-4 bg-green-50 rounded-lg">
+                        <div class="bg-green-100 p-2 rounded-full mr-4">
+                            <i class="fas fa-lightbulb text-green-600"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">Économie d'énergie possible</p>
+                            <p class="text-gray-600 text-sm mt-1">Switch4 a une utilisation très faible (12%). Considérez le mettre en mode veille pendant les heures creuses.</p>
+                            <button class="mt-2 bg-green-600 text-white py-1 px-3 rounded-md text-sm hover:bg-green-700 transition">
+                                <i class="fas fa-play mr-1"></i>Appliquer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4">Historique des Optimisations</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Impact</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">12/06/2025 08:15</td>
+                                <td class="px-6 py-4">Rééquilibrage des charges sur Switch2</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-green-600">+15% performance</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Succès</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">11/06/2025 14:30</td>
+                                <td class="px-6 py-4">Optimisation du routage VLAN</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-green-600">-22% latence</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Succès</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">10/06/2025 09:45</td>
+                                <td class="px-6 py-4">Mise en veille de Switch4</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-green-600">+18% économie</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Succès</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Pied de page -->
+    <footer class="bg-gray-800 text-white py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-network-wired text-xl"></i>
+                        <span class="font-bold text-xl">SDN Manager</span>
+                    </div>
+                    <p class="text-gray-400 mt-2">Gestion avancée des réseaux Software-Defined</p>
+                </div>
+                
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-white transition">
+                        <i class="fab fa-github text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">
+                        <i class="fab fa-twitter text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">
+                        <i class="fab fa-linkedin text-xl"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-6 pt-6 text-center text-gray-400 text-sm">
+                <p>© 2025 SDN Manager. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Gestion des sections
+        function showSection(sectionId) {
+            // Masquer toutes les sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Afficher la section sélectionnée
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Mettre à jour le menu actif
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Si c'est le menu mobile, le fermer
+            document.getElementById('mobile-menu').classList.add('hidden');
+            
+            // Animation
+            document.getElementById(sectionId).classList.add('animate-fade-in');
+            setTimeout(() => {
+                document.getElementById(sectionId).classList.remove('animate-fade-in');
+            }, 500);
+        }
+        
+        // Menu mobile
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+        
+        // Initialisation des graphiques
+        document.addEventListener('DOMContentLoaded', function() {
+            // Graphique de trafic
+            const trafficCtx = document.getElementById('traffic-chart').getContext('2d');
+            const trafficChart = new Chart(trafficCtx, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                    datasets: [
+                        {
+                            label: 'Trafic Entrant (Mbps)',
+                            data: [12, 19, 3, 5, 2, 3],
+                            borderColor: 'rgb(99, 102, 241)',
+                            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Trafic Sortant (Mbps)',
+                            data: [8, 15, 5, 8, 3, 6],
+                            borderColor: 'rgb(236, 72, 153)',
+                            backgroundColor: 'rgba(236, 72, 153, 0.2)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Graphique de latence
+            const latencyCtx = document.getElementById('latency-chart').getContext('2d');
+            const latencyChart = new Chart(latencyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Switch1-Switch2', 'Switch2-Router1', 'Router1-Switch3', 'Switch3-Switch4', 'Switch4-Host5'],
+                    datasets: [{
+                        label: 'Latence (ms)',
+                        data: [12, 19, 8, 15, 7],
+                        backgroundColor: [
+                            'rgba(99, 102, 241, 0.7)',
+                            'rgba(99, 102, 241, 0.7)',
+                            'rgba(99, 102, 241, 0.7)',
+                            'rgba(99, 102, 241, 0.7)',
+                            'rgba(99, 102, 241, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgb(99, 102, 241)',
+                            'rgb(99, 102, 241)',
+                            'rgb(99, 102, 241)',
+                            'rgb(99, 102, 241)',
+                            'rgb(99, 102, 241)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Graphique de bande passante
+            const bandwidthCtx = document.getElementById('bandwidth-chart').getContext('2d');
+            const bandwidthChart = new Chart(bandwidthCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Utilisée', 'Disponible'],
+                    datasets: [{
+                        data: [65, 35],
+                        backgroundColor: [
+                            'rgb(99, 102, 241)',
+                            'rgb(203, 213, 225)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+            
+            // Initialisation de la topologie
+            initTopology();
+        });
+        
+        // Gestion de la topologie
+        function initTopology() {
+            const svg = document.getElementById('topology-canvas');
+            const ns = "http://www.w3.org/2000/svg";
+            
+            // Exemple de topologie simple
+            const switch1 = document.createElementNS(ns, 'circle');
+            switch1.setAttribute('cx', '150');
+            switch1.setAttribute('cy', '150');
+            switch1.setAttribute('r', '30');
+            switch1.setAttribute('fill', '#4f46e5');
+            switch1.setAttribute('class', 'network-node');
+            switch1.setAttribute('data-type', 'switch');
+            switch1.setAttribute('data-id', 'switch1');
+            svg.appendChild(switch1);
+            
+            const switch1Text = document.createElementNS(ns, 'text');
+            switch1Text.setAttribute('x', '150');
+            switch1Text.setAttribute('y', '150');
+            switch1Text.setAttribute('text-anchor', 'middle');
+            switch1Text.setAttribute('dy', '.3em');
+            switch1Text.setAttribute('fill', 'white');
+            switch1Text.textContent = 'S1';
+            svg.appendChild(switch1Text);
+            
+            const router1 = document.createElementNS(ns, 'rect');
+            router1.setAttribute('x', '300');
+            router1.setAttribute('y', '150');
+            router1.setAttribute('width', '60');
+            router1.setAttribute('height', '40');
+            router1.setAttribute('rx', '5');
+            router1.setAttribute('fill', '#10b981');
+            router1.setAttribute('class', 'network-node');
+            router1.setAttribute('data-type', 'router');
+            router1.setAttribute('data-id', 'router1');
+            svg.appendChild(router1);
+            
+            const router1Text = document.createElementNS(ns, 'text');
+            router1Text.setAttribute('x', '330');
+            router1Text.setAttribute('y', '170');
+            router1Text.setAttribute('text-anchor', 'middle');
+            router1Text.setAttribute('dy', '.3em');
+            router1Text.setAttribute('fill', 'white');
+            router1Text.textContent = 'R1';
+            svg.appendChild(router1Text);
+            
+            const link1 = document.createElementNS(ns, 'line');
+            link1.setAttribute('x1', '180');
+            link1.setAttribute('y1', '150');
+            link1.setAttribute('x2', '300');
+            link1.setAttribute('y2', '150');
+            link1.setAttribute('class', 'network-link');
+            svg.appendChild(link1);
+            
+            // Gestion des clics sur les nœuds
+            const nodes = document.querySelectorAll('.network-node');
+            nodes.forEach(node => {
+                node.addEventListener('click', function() {
+                    const type = this.getAttribute('data-type');
+                    const id = this.getAttribute('data-id');
+                    
+                    let properties = '';
+                    if (type === 'switch') {
+                        properties = `
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">Nom</label>
+                                <input type="text" value="${id}" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">Ports</label>
+                                <input type="number" value="24" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">VLANs</label>
+                                <input type="text" value="10,20,30" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                        `;
+                    } else if (type === 'router') {
+                        properties = `
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">Nom</label>
+                                <input type="text" value="${id}" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">Interfaces</label>
+                                <input type="number" value="4" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 mb-2">Protocoles</label>
+                                <input type="text" value="OSPF, BGP" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                        `;
+                    }
+                    
+                    document.getElementById('properties-panel').innerHTML = properties;
+                });
+            });
+        }
+        
+        // Ajout de nœuds
+        function addNode(type) {
+            const svg = document.getElementById('topology-canvas');
+            const ns = "http://www.w3.org/2000/svg";
+            
+            // Générer une position aléatoire
+            const x = Math.floor(Math.random() * 400) + 50;
+            const y = Math.floor(Math.random() * 400) + 50;
+            const id = `${type}${Math.floor(Math.random() * 1000)}`;
+            
+            let node;
+            if (type === 'switch') {
+                node = document.createElementNS(ns, 'circle');
+                node.setAttribute('cx', x);
+                node.setAttribute('cy', y);
+                node.setAttribute('r', '30');
+                node.setAttribute('fill', '#4f46e5');
+            } else if (type === 'router') {
+                node = document.createElementNS(ns, 'rect');
+                node.setAttribute('x', x - 30);
+                node.setAttribute('y', y - 20);
+                node.setAttribute('width', '60');
+                node.setAttribute('height', '40');
+                node.setAttribute('rx', '5');
+                node.setAttribute('fill', '#10b981');
+            } else if (type === 'host') {
+                node = document.createElementNS(ns, 'rect');
+                node.setAttribute('x', x - 25);
+                node.setAttribute('y', y - 25);
+                node.setAttribute('width', '50');
+                node.setAttribute('height', '50');
+                node.setAttribute('rx', '3');
+                node.setAttribute('fill', '#6366f1');
+            } else if (type === 'server') {
+                node = document.createElementNS(ns, 'rect');
+                node.setAttribute('x', x - 30);
+                node.setAttribute('y', y - 20);
+                node.setAttribute('width', '60');
+                node.setAttribute('height', '40');
+                node.setAttribute('rx', '3');
+                node.setAttribute('fill', '#ec4899');
+            }
+            
+            node.setAttribute('class', 'network-node');
+            node.setAttribute('data-type', type);
+            node.setAttribute('data-id', id);
+            svg.appendChild(node);
+            
+            // Ajouter le texte
+            const text = document.createElementNS(ns, 'text');
+            text.setAttribute('x', x);
+            text.setAttribute('y', y);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dy', '.3em');
+            text.setAttribute('fill', 'white');
+            text.textContent = id.charAt(0).toUpperCase() + id.slice(1).replace(/\d+/g, '');
+            svg.appendChild(text);
+            
+            // Ajouter un gestionnaire d'événements
+            node.addEventListener('click', function() {
+                const type = this.getAttribute('data-type');
+                const id = this.getAttribute('data-id');
+                
+                let properties = '';
+                if (type === 'switch') {
+                    properties = `
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2">Nom</label>
+                            <input type="text" value="${id}" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2">Ports</label>
+                            <input type="number" value="24" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2">VLANs</label>
+                            <input type="text" value="10,20,30" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                    `;
+                } else if (type === 'router') {
+                    properties = `
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2">Nom</label>
+                            <input type="text" value="${id}" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2">Interfaces</label>
+                            <input type="number" value="4" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2">Protocoles</label>
+                            <input type="text" value="OSPF, BGP" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                    `;
+                } else if (type === 'host' || type === 'server') {
+                    properties = `
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2">Nom</label>
+                            <input type="text" value="${id}" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2">Adresse IP</label>
+                            <input type="text" value="192.168.1." class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2">MAC</label>
+                            <input type="text" value="00:1A:2B:3C:4D:5E" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('properties-panel').innerHTML = properties;
+            });
+        }
+    </script>
+</body>
+</html>
